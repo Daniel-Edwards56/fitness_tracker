@@ -1,58 +1,73 @@
-const mongoose = require("mongoose");
+const router = require("express").Router();
+const Workout = require("../models/workout.js");
 
-const Schema = mongoose.Schema;
-
-const workoutSchema = new Schema(
-  {
-    day: {
-      type: Date,
-      default: Date.now
-    },
-    exercises: [
-      {
-        type: {
-          type: String,
-          trim: true,
-          required: "Enter an exercise type"
-        },
-        name: {
-          type: String,
-          trim: true,
-          required: "Enter an exercise name"
-        },
-        duration: {
-          type: Number,
-          required: "Enter an exercise duration in minutes"
-        },
-        weight: {
-          type: Number
-        },
-        reps: {
-          type: Number
-        },
-        sets: {
-          type: Number
-        },
-        distance: {
-          type: Number
-        }
-      }
-    ]
-  },
-  {
-    toJSON: {
-      virtuals: true
+// Add a workout
+router.post("/api/workouts", ({ body }, res) => {
+  console.log(body);
+  var workout = {
+    exercises: {
+      type: body.type,
+      name: body.name,
+      duration: body.duration,
+      weight: body.weight,
+      reps: body.reps,
+      sets: body.sets,
+      distance: body.distance
     }
-  }
-);
-
-//Adds propoperties to schema
-workoutSchema.virtual("totalDuration").get(function () {
-  return this.exercises.reduce((total, exercise) => {
-    return total + exercise.duration;
-  }, 0);
+  };
+  Workout.create(workout, (err, result) => {
+    if (err) {
+      console.log(err);
+    }
+    console.log(result);
+  })
+    .then(dbWorkout => {
+      console.log(dbWorkout);
+      res.json(dbWorkout);
+    })
+    .catch(err => {
+      res.status(400).json(err);
+    });
 });
 
-const Workout = mongoose.model("Workout", workoutSchema);
+//Add exercise to workout
+router.put("/api/workouts/:id", (req, res) => {
+  var exercise = req.body;
+  Workout.findByIdAndUpdate(
+    req.params.id,
+    {
+      $push: { exercises: exercise }
+    },
+    { new: true }
+  )
+    .then(function (dbWorkout) {
+      res.json(dbWorkout);
+    })
+    .catch(err => {
+      res.status(400).json(err);
+    });
+});
 
-module.exports = Workout;
+router.get("/api/workouts", (req, res) => {
+  console.log("Getting exercise info");
+  Workout.find({})
+    .then(dbWorkout => {
+      res.json(dbWorkout);
+    })
+    .catch(err => {
+      res.status(400).json(err);
+    });
+});
+
+router.get("/api/workouts/range", (req, res) => {
+  console.log("Getting exercise info");
+  Workout.find({})
+    .then(dbWorkout => {
+      res.json(dbWorkout);
+    })
+    .catch(err => {
+      res.status(400).json(err);
+    });
+});
+
+module.exports = router;
